@@ -1,0 +1,76 @@
+{
+  "definition": {
+    "$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
+    "contentVersion": "1.0.0.0",
+    "triggers": {
+      "manual": {
+        "type": "Request",
+        "kind": "Http",
+        "inputs": {
+          "schema": {
+            "type": "object",
+            "properties": {
+              "type": { "type": "string" },
+              "text": { "type": "string" },
+              "attachments": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "contentType": { "type": "string" },
+                    "content": {
+                      "type": "object",
+                      "properties": {
+                        "type": { "type": "string" },
+                        "version": { "type": "string" },
+                        "body": { "type": "array" }
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            "required": ["text"]
+          }
+        }
+      }
+    },
+    "actions": {
+      "Post_message_in_a_chat_or_channel": {
+        "runAfter": {},
+        "type": "OpenApiConnection",
+        "inputs": {
+          "host": {
+            "connectionName": "shared_teams",
+            "operationId": "PostMessageToConversation",
+            "apiId": "/providers/Microsoft.PowerApps/apis/shared_teams"
+          },
+          "parameters": {
+            "poster": "Flow bot",
+            "location": "Channel",
+            "body/body/recipient/groupId": "d1e420c8-c4a6-42f8-8eee-ec6aa29fa636",
+            "body/body/recipient/channelId": "REPLACE_WITH_APPROVALS_CHANNEL_ID",
+            "body/body/messageBody": "<p>@{triggerBody()?['text']}</p>"
+          },
+          "authentication": "@parameters('$authentication')"
+        }
+      },
+      "Response": {
+        "runAfter": {
+          "Post_message_in_a_chat_or_channel": ["Succeeded"]
+        },
+        "type": "Response",
+        "kind": "Http",
+        "inputs": {
+          "statusCode": 200,
+          "body": { "posted": true }
+        }
+      }
+    }
+  },
+  "schemaVersion": "1.0.0.0",
+  "parameters": {
+    "$connections": { "defaultValue": {}, "type": "Object" },
+    "$authentication": { "defaultValue": {}, "type": "SecureObject" }
+  }
+}
